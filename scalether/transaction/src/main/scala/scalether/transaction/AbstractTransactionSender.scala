@@ -29,7 +29,7 @@ abstract class AbstractTransactionSender[F[_]](val ethereum: Ethereum[F], val fr
 
   protected def fill(transaction: Transaction): F[Transaction] =
     for {
-      gasPrice <- gasPriceProvider.gasPrice
+      gasPrice <- getGasPrice(transaction)
       gas <- getGas(transaction)
     } yield
       transaction.copy(
@@ -45,6 +45,14 @@ abstract class AbstractTransactionSender[F[_]](val ethereum: Ethereum[F], val fr
       me.pure(transaction.gas)
     } else {
       me.raiseError(new IllegalArgumentException(s"request more gas(${transaction.gas}) than max gas in transaction sender($gas)"))
+    }
+  }
+
+  private def getGasPrice(transaction: Transaction): F[BigInteger] = {
+    if (transaction.gasPrice == null) {
+      gasPriceProvider.gasPrice
+    } else  {
+      me.pure(transaction.gasPrice)
     }
   }
 }
