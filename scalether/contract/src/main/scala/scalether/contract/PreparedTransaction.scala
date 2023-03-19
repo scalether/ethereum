@@ -25,11 +25,17 @@ class PreparedTransaction[F[_], O](val address: Address,
                                    val description: String = null)
                                   (implicit m: MonadThrowable[F]) {
 
+  def appendData(addData: Binary): PreparedTransaction[F, O] =
+    new PreparedTransaction[F, O](address, out, data.add(addData), sender, value, gas, gasPrice, from, description)
+
   def withGas(newGas: BigInteger): PreparedTransaction[F, O] =
     new PreparedTransaction[F, O](address, out, data, sender, value, newGas, gasPrice, from, description)
 
   def withGasPrice(newGasPrice: BigInteger): PreparedTransaction[F, O] =
     new PreparedTransaction[F, O](address, out, data, sender, value, gas, newGasPrice, from, description)
+
+  def withData(newData: Binary): PreparedTransaction[F, O] =
+    new PreparedTransaction[F, O](address, out, newData, sender, value, gas, gasPrice, from, description)
 
   def withValue(newValue: BigInteger): PreparedTransaction[F, O] =
     new PreparedTransaction[F, O](address, out, data, sender, newValue, gas, gasPrice, from, description)
