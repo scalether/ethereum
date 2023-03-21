@@ -41,13 +41,13 @@ object TransactionSigner {
     RlpString.create(Bytes.trimLeadingZeroes(ecSignature.getS)),
   )
 
-  protected def longToBytes(x: Long) = {
+  private def longToBytes(x: Long) = {
     val buffer = ByteBuffer.allocate(8)
     buffer.putLong(x)
     buffer.array
   }
 
-  def createEip155SignatureData(signatureData: Sign.SignatureData, chainId: Long): Sign.SignatureData = {
+  private def createEip155SignatureData(signatureData: Sign.SignatureData, chainId: Long): Sign.SignatureData = {
     var v = Numeric.toBigInt(signatureData.getV)
     v = v.subtract(BigInteger.valueOf(27L))
     v = v.add(BigInteger.valueOf(chainId).multiply(BigInteger.valueOf(2L)))
