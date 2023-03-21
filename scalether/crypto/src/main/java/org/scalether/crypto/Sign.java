@@ -210,6 +210,24 @@ public class Sign {
         }
     }
 
+
+    public static int getRecId(SignatureData signatureData, long chainId) {
+        BigInteger v = Numeric.toBigInt(signatureData.getV());
+        BigInteger lowerRealV = BigInteger.valueOf(27);
+        BigInteger lowerRealVPlus1 = BigInteger.valueOf(28);
+        BigInteger lowerRealVReplayProtected = BigInteger.valueOf(37);
+        BigInteger chainIdInc = BigInteger.valueOf(35);
+        if (v.equals(lowerRealV) || v.equals(lowerRealVPlus1)) {
+            return v.subtract(lowerRealV).intValue();
+        } else if (v.compareTo(lowerRealVReplayProtected) >= 0) {
+            return v.subtract(BigInteger.valueOf(chainId).multiply(BigInteger.valueOf(2)))
+                    .subtract(chainIdInc)
+                    .intValue();
+        } else {
+            throw new IllegalArgumentException(String.format("Unsupported v parameter: %s", v));
+        }
+    }
+
     /**
      * Returns public key from the given private key.
      *
