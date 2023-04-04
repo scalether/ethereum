@@ -22,29 +22,33 @@ class PreparedTransaction[F[_], O](val address: Address,
                                    val gas: BigInteger = null,
                                    val gasPrice: BigInteger = null,
                                    val from: Address = null,
-                                   val description: String = null)
+                                   val description: String = null,
+                                   val nonce:BigInteger = null)
                                   (implicit m: MonadThrowable[F]) {
 
   def appendData(addData: Binary): PreparedTransaction[F, O] =
-    new PreparedTransaction[F, O](address, out, data.add(addData), sender, value, gas, gasPrice, from, description)
+    new PreparedTransaction[F, O](address, out, data.add(addData), sender, value, gas, gasPrice, from, description, nonce)
 
   def withGas(newGas: BigInteger): PreparedTransaction[F, O] =
-    new PreparedTransaction[F, O](address, out, data, sender, value, newGas, gasPrice, from, description)
+    new PreparedTransaction[F, O](address, out, data, sender, value, newGas, gasPrice, from, description, nonce)
 
   def withGasPrice(newGasPrice: BigInteger): PreparedTransaction[F, O] =
-    new PreparedTransaction[F, O](address, out, data, sender, value, gas, newGasPrice, from, description)
+    new PreparedTransaction[F, O](address, out, data, sender, value, gas, newGasPrice, from, description, nonce)
 
   def withData(newData: Binary): PreparedTransaction[F, O] =
-    new PreparedTransaction[F, O](address, out, newData, sender, value, gas, gasPrice, from, description)
+    new PreparedTransaction[F, O](address, out, newData, sender, value, gas, gasPrice, from, description, nonce)
 
   def withValue(newValue: BigInteger): PreparedTransaction[F, O] =
-    new PreparedTransaction[F, O](address, out, data, sender, newValue, gas, gasPrice, from, description)
+    new PreparedTransaction[F, O](address, out, data, sender, newValue, gas, gasPrice, from, description, nonce)
 
   def withFrom(newFrom: Address): PreparedTransaction[F, O] =
-    new PreparedTransaction[F, O](address, out, data, sender, value, gas, gasPrice, newFrom, description)
+    new PreparedTransaction[F, O](address, out, data, sender, value, gas, gasPrice, newFrom, description, nonce)
 
   def withSender(newSender: TransactionSender[F]): PreparedTransaction[F, O] =
-    new PreparedTransaction[F, O](address, out, data, newSender, value, gas, gasPrice, from, description)
+    new PreparedTransaction[F, O](address, out, data, newSender, value, gas, gasPrice, from, description, nonce)
+
+  def withNonce(nonce: BigInteger): PreparedTransaction[F, O] =
+    new PreparedTransaction[F, O](address, out, data, sender, value, gas, gasPrice, from, description, nonce)
 
   def call(): F[O] = {
     val tx = createTransaction()
@@ -72,7 +76,7 @@ class PreparedTransaction[F[_], O](val address: Address,
     estimate().flatMap(estimated => this.withGas(estimated).execute())
 
   def createTransaction(): Transaction =
-    Transaction(to = address, data = data, value = value, gas = gas, gasPrice = gasPrice, from = from)
+    Transaction(to = address, data = data, value = value, gas = gas, gasPrice = gasPrice, from = from, nonce = nonce)
 }
 
 object PreparedTransaction {
@@ -85,9 +89,10 @@ object PreparedTransaction {
                         gasPrice: BigInteger = null,
                         from: Address = null,
                         chainId: Long = 0,
-                        description: String = null)
+                        description: String = null,
+                        nonce:BigInteger = null)
                        (implicit m: MonadThrowable[F]): PreparedTransaction[F, O] =
-    new PreparedTransaction[F, O](address, signature.out, signature.encode(in), sender, value, gas, gasPrice, from, description)
+    new PreparedTransaction[F, O](address, signature.out, signature.encode(in), sender, value, gas, gasPrice, from, description, nonce)
 
   val logger: Logger = LoggerFactory.getLogger(PreparedTransaction.getClass)
 }
