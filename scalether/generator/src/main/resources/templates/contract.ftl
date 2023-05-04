@@ -50,6 +50,8 @@
         Array[<@single_scala_type abiType?substring(0, start) components/>]
     <#elseif abiType?starts_with("uint")>
         BigInteger
+    <#elseif abiType?starts_with("int")>
+        BigInteger
     <#elseif abiType == "bool">
         java.lang.Boolean
     <#elseif abiType?starts_with("bytes")>
@@ -82,6 +84,10 @@
         Uint${abiType?substring(4)}Type
     <#elseif abiType?starts_with("uint")>
         Uint${abiType?substring(4)}Type
+    <#elseif abiType == 'int'>
+        Int${abiType?substring(3)}Type
+    <#elseif abiType?starts_with("int")>
+        Int${abiType?substring(3)}Type
     <#elseif abiType == "bool">
         BoolType
     <#elseif abiType == "bytes">
@@ -151,13 +157,13 @@ package ${package}
 import java.math.BigInteger
 
 <#if monadType?has_content>
-import ${monadType}
+    import ${monadType}
 </#if>
 <#if monadImport?has_content>
-import ${monadImport}
+    import ${monadImport}
 </#if>
 <#list imports![] as import>
-import ${import}
+    import ${import}
 </#list>
 import org.ethereum.rpc.domain._
 import scalether.abi._
@@ -172,120 +178,120 @@ import scalether.util.Hex
 import scala.language.higherKinds
 
 <#function get_name map name>
-  <#if (map.getValue(name)??)>
-    <#local result="${name}${map.getValue(name)}"/>
-    <#local ignore = map.setValue(name, 1 + map.getValue(name))>
-    <#return result/>
-  <#else>
-    <#local ignore = map.setValue(name, 1)>
-    <#return name/>
-  </#if>
+    <#if (map.getValue(name)??)>
+        <#local result="${name}${map.getValue(name)}"/>
+        <#local ignore = map.setValue(name, 1 + map.getValue(name))>
+        <#return result/>
+    <#else>
+        <#local ignore = map.setValue(name, 1)>
+        <#return name/>
+    </#if>
 </#function>
 
 class ${truffle.name}<@monad_param/>(address: Address, sender: <@sender/>)<@implicit>(implicit f: MonadThrowable[<@monad/>])</@>
-  extends Contract[<@monad/>](address, sender) {
+extends Contract[<@monad/>](address, sender) {
 
-  import ${truffle.name}._
+import ${truffle.name}._
 
-  <#list truffle.abi as item>
+<#list truffle.abi as item>
     <#if item.type != 'event' && item.name??>
-      <#assign signatureName="${get_name(signatures, item.name)}Signature"/>
+        <#assign signatureName="${get_name(signatures, item.name)}Signature"/>
         <#if item.constant>
-  def ${item.name}<@args item.inputs/>: <@monadic><@tuple_type item.outputs/></@> =
-    <#if preparedTransaction?has_content>${preparedTransaction}<#else>PreparedTransaction</#if>(address, ${signatureName}, <@args_tuple item.inputs/>, sender, description = "${item.name}").call()
+            def ${item.name}<@args item.inputs/>: <@monadic><@tuple_type item.outputs/></@> =
+            <#if preparedTransaction?has_content>${preparedTransaction}<#else>PreparedTransaction</#if>(address, ${signatureName}, <@args_tuple item.inputs/>, sender, description = "${item.name}").call()
         <#else>
-  def ${item.name}<@args item.inputs/>: <#if preparedTransaction?has_content>${preparedTransaction}<#else>PreparedTransaction</#if>[<#if !(preparedTransaction?has_content)><@monad/>, </#if><@tuple_type item.outputs/>] =
-    <#if preparedTransaction?has_content>${preparedTransaction}<#else>PreparedTransaction</#if>(address, ${signatureName}, <@args_tuple item.inputs/>, sender, description = "${item.name}")
+            def ${item.name}<@args item.inputs/>: <#if preparedTransaction?has_content>${preparedTransaction}<#else>PreparedTransaction</#if>[<#if !(preparedTransaction?has_content)><@monad/>, </#if><@tuple_type item.outputs/>] =
+            <#if preparedTransaction?has_content>${preparedTransaction}<#else>PreparedTransaction</#if>(address, ${signatureName}, <@args_tuple item.inputs/>, sender, description = "${item.name}")
         </#if>
-	<#elseif item.type?lower_case == 'fallback'>
-  def fallback: <#if preparedTransaction?has_content>${preparedTransaction}<#else>PreparedTransaction</#if>[<#if !(preparedTransaction?has_content)><@monad/>, </#if>Unit] =
-    new <#if preparedTransaction?has_content>${preparedTransaction}<#else>PreparedTransaction</#if>(address, UnitType, Binary(), sender, BigInteger.ZERO, description = "fallback")
+    <#elseif item.type?lower_case == 'fallback'>
+        def fallback: <#if preparedTransaction?has_content>${preparedTransaction}<#else>PreparedTransaction</#if>[<#if !(preparedTransaction?has_content)><@monad/>, </#if>Unit] =
+        new <#if preparedTransaction?has_content>${preparedTransaction}<#else>PreparedTransaction</#if>(address, UnitType, Binary(), sender, BigInteger.ZERO, description = "fallback")
     </#if>
-  </#list>
+</#list>
 }
 
 object ${truffle.name} extends <#if truffle.abstract>ContractObject<#else>NonAbstractContractObject[Type[<@tuple_type constructor_args/>]]</#if> {
-  val name = "${truffle.name}"
-  val abi = ${abi}
-  val bin = "${truffle.bin}"
-  <#if !truffle.abstract>
+val name = "${truffle.name}"
+val abi = ${abi}
+val bin = "${truffle.bin}"
+<#if !truffle.abstract>
 
-  val constructor = <@type constructor_args/>
+    val constructor = <@type constructor_args/>
 
-  def checkConstructorTx(txInput: Binary) = Constructor.checkConstructorTx(txInput, this)
+    def checkConstructorTx(txInput: Binary) = Constructor.checkConstructorTx(txInput, this)
 
-  def encodeArgs<@args constructor_args/>: Binary =
+    def encodeArgs<@args constructor_args/>: Binary =
     constructor.encode(<@args_values constructor_args/>)
 
-  def deployTransactionData<@args constructor_args/>: Binary =
+    def deployTransactionData<@args constructor_args/>: Binary =
     Binary(Hex.toBytes(bin)) ++ encodeArgs<@args_params constructor_args/>
 
-  def deploy<@monad_param/>(sender: <@sender/>)<@args constructor_args/><@implicit>(implicit f: Functor[<@monad/>])</@>: <@monadic>Word</@> =
+    def deploy<@monad_param/>(sender: <@sender/>)<@args constructor_args/><@implicit>(implicit f: Functor[<@monad/>])</@>: <@monadic>Word</@> =
     sender.sendTransaction(request.Transaction(data = deployTransactionData<@args_params constructor_args/>))
 
-  <#if F?has_content && F == "Id">
-  def deployAndWait<@monad_param/>(sender: <@sender/>, poller: <@poller/>)<@args constructor_args/><@implicit>(implicit m: MonadThrowable[<@monad/>])</@>: <@monadic>${truffle.name}<#if !(F?has_content)>[F]</#if></@> = {
-    val receipt = poller.waitForTransaction(deploy(sender)<@args_params constructor_args/>)
-    new ${truffle.name}<#if !(F?has_content)>[F]</#if>(receipt.contractAddress, sender)
-  }
-  <#else>
-  def deployAndWait<@monad_param/>(sender: <@sender/>, poller: <@poller/>)<@args constructor_args/><@implicit>(implicit m: MonadThrowable[<@monad/>])</@>: <@monad/>[${truffle.name}<#if !(F?has_content)>[F]</#if>] =
-      poller.waitForTransaction(deploy(sender)<@args_params constructor_args/>)
-      .map(receipt => new ${truffle.name}<#if !(F?has_content)>[F]</#if>(receipt.contractAddress, sender))
-  </#if>
-  </#if>
-
-  <#assign ignore=signatures.clear()/>
-  <#list truffle.abi as item>
-    <#if item.type != 'event' && item.name??>
-      <#assign signatureName="${get_name(signatures, item.name)}Signature"/>
-  val ${signatureName} = <@signature item/>
+    <#if F?has_content && F == "Id">
+        def deployAndWait<@monad_param/>(sender: <@sender/>, poller: <@poller/>)<@args constructor_args/><@implicit>(implicit m: MonadThrowable[<@monad/>])</@>: <@monadic>${truffle.name}<#if !(F?has_content)>[F]</#if></@> = {
+        val receipt = poller.waitForTransaction(deploy(sender)<@args_params constructor_args/>)
+        new ${truffle.name}<#if !(F?has_content)>[F]</#if>(receipt.contractAddress, sender)
+        }
+    <#else>
+        def deployAndWait<@monad_param/>(sender: <@sender/>, poller: <@poller/>)<@args constructor_args/><@implicit>(implicit m: MonadThrowable[<@monad/>])</@>: <@monad/>[${truffle.name}<#if !(F?has_content)>[F]</#if>] =
+        poller.waitForTransaction(deploy(sender)<@args_params constructor_args/>)
+        .map(receipt => new ${truffle.name}<#if !(F?has_content)>[F]</#if>(receipt.contractAddress, sender))
     </#if>
-  </#list>
+</#if>
+
+<#assign ignore=signatures.clear()/>
+<#list truffle.abi as item>
+    <#if item.type != 'event' && item.name??>
+        <#assign signatureName="${get_name(signatures, item.name)}Signature"/>
+        val ${signatureName} = <@signature item/>
+    </#if>
+</#list>
 }
 
 <#list truffle.abi as item>
-  <#if item.type == "event">
-    <#assign simpleName=item.name/>
-    <#if simpleName?ends_with('Event')>
-        <#assign simpleName=simpleName[0..*(simpleName?length-5)]/>
+    <#if item.type == "event">
+        <#assign simpleName=item.name/>
+        <#if simpleName?ends_with('Event')>
+            <#assign simpleName=simpleName[0..*(simpleName?length-5)]/>
+        </#if>
+        <#assign eventName="${get_name(events, simpleName)}Event"/>
+        case class ${eventName}(log: response.Log<#if item.all?has_content>, <#list item.all as arg>${arg.name}: <@event_arg_type arg/><#if arg?has_next>, </#if></#list></#if>)
+
+        object ${eventName} {
+        import TopicFilter.simple
+
+        val event = Event("${item.name}", List(<@type_list item.inputs/>), <@type item.indexed/>, <@type item.nonIndexed/>)
+        val id: Word = Word.apply("${item.id}")
+
+        def filter(<#list item.indexed as arg>${arg.name}: <@single_scala_type arg.type arg.components/><#if arg?has_next>, </#if></#list>): LogFilter =
+        LogFilter(topics = List(simple(id)<#if item.indexed?has_content>, <#list item.indexed as arg><@single_type arg.type/>.encodeForTopic(${arg.name})<#if arg?has_next>, </#if></#list></#if>))
+
+        def apply(receipt: scalether.domain.response.TransactionReceipt): List[${eventName}] =
+        receipt.logs
+        .filter(_.topics.head == id)
+        .map(${eventName}(_))
+
+        def apply(log: response.Log): ${eventName} = {
+        assert(log.topics.head == id)
+
+        <#if item.nonIndexed?has_content>val decodedData = event.decode(log.data)</#if>
+        <#list item.indexed as arg>
+            val ${arg.name} = <@event_indexed_arg arg arg?index/>
+        </#list>
+        <#if item.nonIndexed?size == 1>
+            <#list item.nonIndexed as arg>
+                val ${arg.name} = decodedData
+            </#list>
+        <#else>
+            <#list item.nonIndexed as arg>
+                val ${arg.name} = <@event_non_indexed_arg arg arg?index/>
+            </#list>
+        </#if>
+        ${eventName}(log<#if item.all?has_content>, <#list item.all as arg>${arg.name}<#if arg?has_next>, </#if></#list></#if>)
+        }
+        }
+
     </#if>
-    <#assign eventName="${get_name(events, simpleName)}Event"/>
-case class ${eventName}(log: response.Log<#if item.all?has_content>, <#list item.all as arg>${arg.name}: <@event_arg_type arg/><#if arg?has_next>, </#if></#list></#if>)
-
-object ${eventName} {
-  import TopicFilter.simple
-
-  val event = Event("${item.name}", List(<@type_list item.inputs/>), <@type item.indexed/>, <@type item.nonIndexed/>)
-  val id: Word = Word.apply("${item.id}")
-
-  def filter(<#list item.indexed as arg>${arg.name}: <@single_scala_type arg.type arg.components/><#if arg?has_next>, </#if></#list>): LogFilter =
-    LogFilter(topics = List(simple(id)<#if item.indexed?has_content>, <#list item.indexed as arg><@single_type arg.type/>.encodeForTopic(${arg.name})<#if arg?has_next>, </#if></#list></#if>))
-
-  def apply(receipt: scalether.domain.response.TransactionReceipt): List[${eventName}] =
-    receipt.logs
-      .filter(_.topics.head == id)
-      .map(${eventName}(_))
-
-  def apply(log: response.Log): ${eventName} = {
-    assert(log.topics.head == id)
-
-    <#if item.nonIndexed?has_content>val decodedData = event.decode(log.data)</#if>
-    <#list item.indexed as arg>
-    val ${arg.name} = <@event_indexed_arg arg arg?index/>
-    </#list>
-    <#if item.nonIndexed?size == 1>
-      <#list item.nonIndexed as arg>
-    val ${arg.name} = decodedData
-      </#list>
-    <#else>
-      <#list item.nonIndexed as arg>
-    val ${arg.name} = <@event_non_indexed_arg arg arg?index/>
-      </#list>
-    </#if>
-    ${eventName}(log<#if item.all?has_content>, <#list item.all as arg>${arg.name}<#if arg?has_next>, </#if></#list></#if>)
-  }
-}
-
-  </#if>
 </#list>
