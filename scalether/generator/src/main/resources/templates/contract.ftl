@@ -50,6 +50,8 @@
         Array[<@single_scala_type abiType?substring(0, start) components/>]
     <#elseif abiType?starts_with("uint")>
         BigInteger
+    <#elseif abiType?starts_with("int")>
+        BigInteger
     <#elseif abiType == "bool">
         java.lang.Boolean
     <#elseif abiType?starts_with("bytes")>
@@ -82,6 +84,10 @@
         Uint${abiType?substring(4)}Type
     <#elseif abiType?starts_with("uint")>
         Uint${abiType?substring(4)}Type
+    <#elseif abiType == 'int'>
+        Int${abiType?substring(3)}Type
+    <#elseif abiType?starts_with("int")>
+        Int${abiType?substring(3)}Type
     <#elseif abiType == "bool">
         BoolType
     <#elseif abiType == "bytes">

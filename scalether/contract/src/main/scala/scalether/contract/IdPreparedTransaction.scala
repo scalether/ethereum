@@ -18,23 +18,24 @@ class IdPreparedTransaction[O](address: Address,
                                gas: BigInteger = null,
                                gasPrice: BigInteger = null,
                                from: Address = null,
+                               isEip1559: Boolean = false,
                                description: String = null)
-  extends PreparedTransaction[Id, O](address, out, data, sender, value, gas, gasPrice, from, description) {
+  extends PreparedTransaction[Id, O](address, out, data, sender, value, gas, gasPrice, from, isEip1559, description) {
 
   override def withGas(newGas: BigInteger): IdPreparedTransaction[O] =
-    new IdPreparedTransaction[O](address, out, data, sender, value, newGas, gasPrice, from, description)
+    new IdPreparedTransaction[O](address, out, data, sender, value, newGas, gasPrice, from,isEip1559, description)
 
   override def withGasPrice(newGasPrice: BigInteger): IdPreparedTransaction[O] =
-    new IdPreparedTransaction[O](address, out, data, sender, value, gas, newGasPrice, from, description)
+    new IdPreparedTransaction[O](address, out, data, sender, value, gas, newGasPrice, from, isEip1559, description)
 
   override def withValue(newValue: BigInteger): IdPreparedTransaction[O] =
-    new IdPreparedTransaction[O](address, out, data, sender, newValue, gas, gasPrice, from, description)
+    new IdPreparedTransaction[O](address, out, data, sender, newValue, gas, gasPrice, from, isEip1559, description)
 
   override def withFrom(newFrom: Address): IdPreparedTransaction[O] =
-    new IdPreparedTransaction[O](address, out, data, sender, value, gas, gasPrice, newFrom, description)
+    new IdPreparedTransaction[O](address, out, data, sender, value, gas, gasPrice, newFrom,isEip1559, description)
 
   def withSender(newSender: IdTransactionSender): IdPreparedTransaction[O] =
-    new IdPreparedTransaction[O](address, out, data, newSender, value, gas, gasPrice, from, description)
+    new IdPreparedTransaction[O](address, out, data, newSender, value, gas, gasPrice, from, isEip1559, description)
 
   override def call(): O = super.call()
 
@@ -54,6 +55,7 @@ object IdPreparedTransaction {
                   gas: BigInteger = null,
                   gasPrice: BigInteger = null,
                   from: Address = null,
+                  isEip1559: Boolean = false,
                   description: String = null): IdPreparedTransaction[O] =
-    new IdPreparedTransaction[O](address, signature.out, signature.encode(in), sender, value, gas, gasPrice, from, description)
+    new IdPreparedTransaction[O](address, signature.out, signature.encode(in), sender, value, gas, gasPrice, from, isEip1559, description)
 }

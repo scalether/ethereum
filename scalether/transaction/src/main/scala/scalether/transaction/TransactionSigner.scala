@@ -3,7 +3,6 @@ package scalether.transaction
 import java.math.BigInteger
 import java.nio.ByteBuffer
 
-import org.ethereum.rpc.domain.Binary
 import org.scalether.crypto.Sign
 import org.scalether.crypto.Sign.SignatureData
 import org.scalether.rlp.{RlpEncoder, RlpList, RlpString, RlpType}

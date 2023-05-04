@@ -18,23 +18,24 @@ class MonoPreparedTransaction[O](address: Address,
                                  gas: BigInteger = null,
                                  gasPrice: BigInteger = null,
                                  from: Address = null,
+                                 isEip1559: Boolean = false,
                                  description: String = null)
-  extends PreparedTransaction[Mono, O](address, out, data, sender, value, gas, gasPrice, from, description) {
+  extends PreparedTransaction[Mono, O](address, out, data, sender, value, gas, gasPrice, from, isEip1559, description) {
 
   override def withGas(newGas: BigInteger): MonoPreparedTransaction[O] =
-    new MonoPreparedTransaction[O](address, out, data, sender, value, newGas, gasPrice, from, description)
+    new MonoPreparedTransaction[O](address, out, data, sender, value, newGas, gasPrice, from, isEip1559, description)
 
   override def withGasPrice(newGasPrice: BigInteger): MonoPreparedTransaction[O] =
-    new MonoPreparedTransaction[O](address, out, data, sender, value, gas, newGasPrice, from, description)
+    new MonoPreparedTransaction[O](address, out, data, sender, value, gas, newGasPrice, from, isEip1559, description)
 
   override def withValue(newValue: BigInteger): MonoPreparedTransaction[O] =
-    new MonoPreparedTransaction[O](address, out, data, sender, newValue, gas, gasPrice, from, description)
+    new MonoPreparedTransaction[O](address, out, data, sender, newValue, gas, gasPrice, from, isEip1559, description)
 
   override def withFrom(newFrom: Address): MonoPreparedTransaction[O] =
-    new MonoPreparedTransaction[O](address, out, data, sender, value, gas, gasPrice, newFrom, description)
+    new MonoPreparedTransaction[O](address, out, data, sender, value, gas, gasPrice, newFrom, isEip1559, description)
 
   def withSender(newSender: MonoTransactionSender): MonoPreparedTransaction[O] =
-    new MonoPreparedTransaction[O](address, out, data, newSender, value, gas, gasPrice, from, description)
+    new MonoPreparedTransaction[O](address, out, data, newSender, value, gas, gasPrice, from, isEip1559, description)
 
   override def call(): Mono[O] = super.call()
 
@@ -54,6 +55,7 @@ object MonoPreparedTransaction {
                   gas: BigInteger = null,
                   gasPrice: BigInteger = null,
                   from: Address = null,
+                  isEip1559: Boolean = false,
                   description: String = null): MonoPreparedTransaction[O] =
-    new MonoPreparedTransaction[O](address, signature.out, signature.encode(in), sender, value, gas, gasPrice, from, description)
+    new MonoPreparedTransaction[O](address, signature.out, signature.encode(in), sender, value, gas, gasPrice, from, isEip1559, description)
 }
